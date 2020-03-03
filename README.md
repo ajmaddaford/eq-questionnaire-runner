@@ -1,4 +1,4 @@
-# EQ Questionnaire Runner
+# eQ Questionnaire Runner
 
 ![Build Status](https://github.com/ONSdigital/eq-questionnaire-runner/workflows/Master/badge.svg)
 [![codecov](https://codecov.io/gh/ONSdigital/eq-questionnaire-runner/branch/master/graph/badge.svg)](https://codecov.io/gh/ONSdigital/eq-questionnaire-runner/branch/master)
