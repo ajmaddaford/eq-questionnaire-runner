@@ -1,9 +1,9 @@
 import logging
 import re
 from datetime import datetime
+from typing import Optional
 
 from dateutil.relativedelta import relativedelta
-
 
 MAX_REPEATS = 25
 
@@ -62,6 +62,15 @@ def evaluate_condition(condition, answer_value, match_value):
     """
     answer_and_match = answer_value is not None and match_value is not None
 
+    if condition in {"equals", "not equals", "equals any", "not equals any"}:
+
+        answer_value = casefold(answer_value)
+
+        if isinstance(match_value, (list, tuple)):
+            match_value = list(map(casefold, match_value))
+        else:
+            match_value = casefold(match_value)
+
     comparison_operators = {
         "equals": lambda answer_value, match_value: answer_value == match_value,
         "not equals": lambda answer_value, match_value: answer_value != match_value,
@@ -93,6 +102,13 @@ def evaluate_condition(condition, answer_value, match_value):
     return match_function(answer_value, match_value)
 
 
+def casefold(value):
+    try:
+        return value.casefold()
+    except AttributeError:
+        return value
+
+
 def get_date_match_value(date_comparison, answer_store, schema, metadata):
     match_value = None
 
@@ -119,14 +135,18 @@ def get_date_match_value(date_comparison, answer_store, schema, metadata):
     return match_value
 
 
-def convert_to_datetime(value):
-    date_format = "%Y-%m"
-    if value and re.match(r"\d{4}-\d{2}-\d{2}", value):
-        date_format = "%Y-%m-%d"
-    if value and re.match(r"\d{4}$", value):
-        date_format = "%Y"
+def convert_to_datetime(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
 
-    return datetime.strptime(value, date_format) if value else None
+    if re.match(r"\d{4}-\d{2}-\d{2}", value):
+        date_format = "%Y-%m-%d"
+    elif re.match(r"\d{4}$", value):
+        date_format = "%Y"
+    else:
+        date_format = "%Y-%m"
+
+    return datetime.strptime(value, date_format)
 
 
 def evaluate_goto(
@@ -171,7 +191,7 @@ def _get_comparison_id_value(
     when_rule, answer_store, schema, current_location=None, routing_path_block_ids=None
 ):
     """
-        Gets the value of a comparison id specified as an operand in a comparator
+    Gets the value of a comparison id specified as an operand in a comparator
     """
     if current_location and when_rule["comparison"]["source"] == "location":
         try:
@@ -320,7 +340,9 @@ def evaluate_when_rules(
 
 
 def get_answer_for_answer_id(answer_id, answer_store, schema, list_item_id):
-    list_item_id = schema.get_list_item_id_for_answer_id(answer_id, list_item_id)
+    list_item_id = (
+        list_item_id if list_item_id and schema.is_repeating_answer(answer_id) else None
+    )
 
     answer = answer_store.get_answer(
         answer_id, list_item_id
@@ -353,4 +375,6 @@ def get_list_count(list_store, list_name):
 
 
 def is_goto_rule(rule):
-    return any(key in rule.get("goto", {}) for key in ("when", "block", "group"))
+    return any(
+        key in rule.get("goto", {}) for key in ("when", "block", "group", "section")
+    )

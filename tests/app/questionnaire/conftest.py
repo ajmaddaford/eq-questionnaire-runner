@@ -1,7 +1,10 @@
 # pylint: disable=redefined-outer-name
+from unittest.mock import Mock
+
 import pytest
 
-from app.data_model.answer_store import AnswerStore
+from app.data_models.answer_store import AnswerStore
+from app.questionnaire import QuestionnaireSchema
 from app.questionnaire.location import Location
 from app.questionnaire.placeholder_parser import PlaceholderParser
 
@@ -158,11 +161,6 @@ def list_collector_variant_schema():
                                 "id": "block1",
                                 "type": "ListCollector",
                                 "for_list": "people",
-                                "add_answer": {"id": "answer1", "value": "Yes"},
-                                "remove_answer": {
-                                    "id": "remove-confirmation",
-                                    "value": "Yes",
-                                },
                                 "question_variants": [
                                     {
                                         "question": {
@@ -173,6 +171,9 @@ def list_collector_variant_schema():
                                                 {
                                                     "id": "answer1",
                                                     "label": "Collector Answer 1 Variant Yes",
+                                                    "action": {
+                                                        "type": "RedirectToListAddBlock"
+                                                    },
                                                 }
                                             ],
                                         },
@@ -310,6 +311,9 @@ def list_collector_variant_schema():
                                                     {
                                                         "id": "answer1",
                                                         "label": "Answer 1 Variant Yes",
+                                                        "action": {
+                                                            "type": "RemoveListItemAndAnswers"
+                                                        },
                                                     }
                                                 ],
                                             },
@@ -569,6 +573,75 @@ def mock_relationship_collector_schema():
     }
 
 
+@pytest.fixture()
+def section_with_custom_summary():
+    return {
+        "sections": [
+            {
+                "id": "section",
+                "summary": {
+                    "show_on_completion": True,
+                    "items": [
+                        {
+                            "type": "List",
+                            "for_list": "people",
+                            "title": "Householders",
+                            "add_link_text": "Add a person",
+                            "empty_list_text": "No householders",
+                            "item_title": {
+                                "text": "{person_name}",
+                                "placeholders": [
+                                    {
+                                        "placeholder": "person_name",
+                                        "transforms": [
+                                            {
+                                                "arguments": {
+                                                    "delimiter": " ",
+                                                    "list_to_concatenate": [
+                                                        {
+                                                            "source": "answers",
+                                                            "identifier": "first-name",
+                                                        },
+                                                        {
+                                                            "source": "answers",
+                                                            "identifier": "last-name",
+                                                        },
+                                                    ],
+                                                },
+                                                "transform": "concatenate_list",
+                                            }
+                                        ],
+                                    }
+                                ],
+                            },
+                        }
+                    ],
+                },
+                "groups": [
+                    {
+                        "id": "group",
+                        "title": "List",
+                        "blocks": [
+                            {
+                                "type": "RelationshipCollector",
+                                "id": "relationships",
+                                "for_list": "people",
+                                "question": {},
+                            },
+                            {
+                                "type": "RelationshipCollector",
+                                "id": "not-people-relationship-collector",
+                                "for_list": "not-people",
+                                "question": {},
+                            },
+                        ],
+                    }
+                ],
+            }
+        ]
+    }
+
+
 @pytest.fixture
 def section_with_repeating_list():
     return {
@@ -612,3 +685,18 @@ def section_with_repeating_list():
             }
         ]
     }
+
+
+@pytest.fixture
+def mock_schema():
+    schema = Mock(
+        QuestionnaireSchema(
+            {
+                "questionnaire_flow": {
+                    "type": "Linear",
+                    "options": {"summary": {"collapsible": False}},
+                }
+            }
+        )
+    )
+    return schema

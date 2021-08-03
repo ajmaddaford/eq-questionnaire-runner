@@ -1,15 +1,14 @@
 # pylint: disable=unused-argument
 from datetime import datetime
 
-from mock import patch
-
 import pytest
 from dateutil.relativedelta import relativedelta
+from mock import patch
 from wtforms import Form
 
-from app.data_model.answer import Answer
-from app.data_model.answer_store import AnswerStore
-from app.forms.field_handlers.date_handler import DateHandler
+from app.data_models.answer import Answer
+from app.data_models.answer_store import AnswerStore
+from app.forms.field_handlers import DateHandler
 from app.forms.fields import date_field
 from app.questionnaire.location import Location
 from app.questionnaire.questionnaire_schema import QuestionnaireSchema
@@ -96,7 +95,7 @@ def test_get_referenced_offset_value_for_now_value(app):
     minimum_date = handler.transform_date_by_offset(minimum_date, {"days": 10})
 
     assert datetime.date(minimum_date) == (
-        datetime.now().date() + relativedelta(days=10)
+        datetime.utcnow().date() + relativedelta(days=10)
     )
 
 
@@ -134,8 +133,8 @@ def test_get_referenced_offset_value_for_answer_id(app):
     "app.utilities.schema.load_schema_from_name", return_value=QuestionnaireSchema({})
 )
 @patch(
-    "app.questionnaire.questionnaire_schema.QuestionnaireSchema.get_list_item_id_for_answer_id",
-    return_value="abcde",
+    "app.questionnaire.questionnaire_schema.QuestionnaireSchema.is_repeating_answer",
+    return_value=True,
 )
 def test_get_referenced_offset_value_with_list_item_id(app, schema_mock):
     list_item_id = "abcde"
