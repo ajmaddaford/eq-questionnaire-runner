@@ -1,6 +1,6 @@
 services:
   datastore:
-    image: pricemonsdigital/gcloud-datastore-emulator:2.3.1
+    image: ghcr.io/onsdigital/census31-eq-datastore-emulator:pr-1-cte-41-create-census-31-eq-runner-docker-images-repo-and-introduce-datastore-emulator-image-tbl-0016
     environment:
       - CLOUDSDK_CORE_PROJECT=local
     networks:
@@ -16,7 +16,7 @@ services:
       - "6379:6379"
 
   runner:
-    image: europe-west2-docker.pkg.dev/census-eq-ci/docker-images/census31-eq-questionnaire-runner:latest
+    image: europe-west2-docker.pkg.dev/c31-eq-ci-prod/images/census31-eq-questionnaire-runner:latest
     build:
       context: ./
       args:
