@@ -10,7 +10,7 @@ from app.publisher.exceptions import InvalidTopicId, PublicationFailed
 
 logger = get_logger(__name__)
 
-TOPIC_NAME_PATTERN = re.compile(r"^(?!goog)[a-z][a-z-]{2,254}$")
+TOPIC_NAME_PATTERN = re.compile(r"^(?!goog)[a-z][a-z_-]{2,254}$")
 
 
 class Publisher(ABC):
